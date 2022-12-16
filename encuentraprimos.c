@@ -1,6 +1,7 @@
 //TRABAJO REALIZADO POR MARINA GARCIA Y PAULA MÉNDEZ
 //  Empezamos el: 12_12_2022
 
+//INCLUDES -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,10 +12,12 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+//DEFINES ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #define LONGITUD_MSG 100           // Payload del mensaje
 #define LONGITUD_MSG_ERR 200       // Mensajes de error por pantalla
 
-// CÃ³digos de exit por error
+// codigos de exit por error
 #define ERR_ENTRADA_ERRONEA 2
 #define ERR_SEND 3
 #define ERR_RECV 4
@@ -24,60 +27,73 @@
 #define NOMBRE_FICH_CUENTA "cuentaprimos.txt"
 #define CADA_CUANTOS_ESCRIBO 5
 
-// rango de bÃºsqueda, desde BASE a BASE+RANGO
+// rango de busqueda, desde BASE a BASE+RANGO
 #define BASE 800000000
 #define RANGO 2000
 
 // Intervalo del temporizador para RAIZ
 #define INTERVALO_TIMER 5
 
-// CÃ³digos de mensaje para el campo mesg_type del tipo T_MESG_BUFFER
-#define COD_ESTOY_AQUI 5           // Un calculador indica al SERVER que estÃ¡ preparado
-#define COD_LIMITES 4              // Mensaje del SERVER al calculador indicando los lÃ­mites de operaciÃ³n
+// CÃ³digos de mensaje para el campo mesg_type del tipo T_MESG_BUFFER 
+#define COD_ESTOY_AQUI 5           // Un calculador indica al SERVER que esta preparado
+#define COD_LIMITES 4              // Mensaje del SERVER al calculador indicando los limites de operacion
 #define COD_RESULTADOS 6           // Localizado un primo
 #define COD_FIN 7                  // Final del procesamiento de un calculador
 
-// Mensaje que se intercambia
-
+// Mensaje que se intercambia ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 typedef struct {
     long mesg_type;
     char mesg_text[LONGITUD_MSG];
 } T_MESG_BUFFER;
 
+//PROTOTIPOS DE LAS FUNCIONES ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 int Comprobarsiesprimo(long int numero);
 void Informar(char *texto, int verboso);
 void Imprimirjerarquiaproc(int pidraiz,int pidservidor, int *pidhijos, int numhijos);
 int ContarLineas();
 static void alarmHandler(int signo);
 
-int cuentasegs;                   // Variable para el cÃ³mputo del tiempo total
+int cuentasegs;                   // Variable para el computo del tiempo total
 
-int main(int argc, char* argv[])
-{
+//MAIN ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+int main(int argc, char* argv[]){
 	int i,j;
-	long int numero;
-	long int numprimrec;
-    long int nbase;
-    int nrango;
-    int nfin;
-    time_t tstart,tend; 
+	 //long int numero;
+	 //long int numprimrec;
+     //long int nbase;
+     //int nrango;
+     //int nfin;
+     //time_t tstart,tend; 
 	
 	key_t key;
     int msgid;    
     int pid, pidservidor, pidraiz, parentpid, mypid, pidcalc;
-    int *pidhijos;
-    int intervalo,inicuenta;
+     //int *pidhijos;
+     //int intervalo,inicuenta;
     int verbosity;
     T_MESG_BUFFER message;
-    char info[LONGITUD_MSG_ERR];
-    FILE *fsal, *fc;
+    // char info[LONGITUD_MSG_ERR];
+     //FILE *fsal, *fc;
     int numhijos;
 
-    // Control de entrada, despuÃ©s del nombre del script debe figurar el nÃºmero de hijos y el parÃ¡metro verbosity
+    // Control de entrada, depsues del nombre del script debe figurar el numero de hijos y el parámetro verbosity
 
-    numhijos = 2;     // SOLO para el esqueleto, en el proceso  definitivo vendrÃ¡ por la entrada
+    //numhijos = 2;     // SOLO para el esqueleto, en el proceso  definitivo vendra por la entrada
+	
+	if(argc != 3){
 
-    pid=fork();       // CreaciÃ³n del SERVER
+        printf("ERROR, deberia de haber otros parametros");
+    }else {
+		/* Comprobacion que coge bien el argc y argv
+        for(int i=0; i<argc ; i++){
+           printf("argv[%d] : %d\n ", i,atoi(argv[i]));
+        }
+		*/
+    }
+	numhijos=atoi(argv[1]);
+	verbosity=atoi(argv[2]);
+	
+    pid=fork();       // Creacion del SERVER
     
     if (pid == 0)     // Rama del hijo de RAIZ (SERVER)
     {
@@ -85,7 +101,7 @@ int main(int argc, char* argv[])
 		pidservidor = pid;
 		mypid = pidservidor;	   
 		
-		// PeticiÃ³n de clave para crear la cola
+		// peticion de clave para crear la cola
 		if ( ( key = ftok( "/tmp", 'C' ) ) == -1 ) {
 		  perror( "Fallo al pedir ftok" );
 		  exit( 1 );
@@ -93,7 +109,7 @@ int main(int argc, char* argv[])
 		
 		printf( "Server: System V IPC key = %u\n", key );
 
-        // CreaciÃ³n de la cola de mensajerÃ­a
+        // CreaciÃ³n de la cola de mensajeria
 		if ( ( msgid = msgget( key, IPC_CREAT | 0666 ) ) == -1 ) {
 		  perror( "Fallo al crear la cola de mensajes" );
 		  exit( 2 );
@@ -103,7 +119,7 @@ int main(int argc, char* argv[])
         i = 0;
         // CreaciÃ³n de los procesos CALCuladores
 		while(i < numhijos) {
-		 if (pid > 0) { // Solo SERVER crearÃ¡ hijos
+		 if (pid > 0) { // Solo SERVER creara¡ hijos
 			 pid=fork(); 
 			 if (pid == 0) 
 			   {   // Rama hijo
@@ -111,31 +127,27 @@ int main(int argc, char* argv[])
 				mypid = getpid();
 			   }
 			 }
-		 i++;  // NÃºmero de hijos creados
+		 i++;  // n de hijos creados
 		}
 
         // AQUI VA LA LOGICA DE NEGOCIO DE CADA CALCulador. 
-		if (mypid != pidservidor)
-		{
+		if (mypid != pidservidor){
 
 			message.mesg_type = COD_ESTOY_AQUI;
 			sprintf(message.mesg_text,"%d",mypid);
 			msgsnd( msgid, &message, sizeof(message), IPC_NOWAIT);
 		
-			// Un montÃ³n de cÃ³digo por escribir
+			// Un montÃ³n de codigo por escribir
 			sleep(60); // Esto es solo para que el esqueleto no muera de inmediato, quitar en el definitivo
 
 			exit(0);
 		}
-		
 		// SERVER
-		
-		else
-		{ 
-		  // Pide memoria dinÃ¡mica para crear la lista de pids de los hijos CALCuladores
+		else{ 
+		  // Pide memoria dinamica para crear la lista de pids de los hijos CALCuladores
 		  
 		  
-		  //RecepciÃ³n de los mensajes COD_ESTOY_AQUI de los hijos
+		  //Recepcion de los mensajes COD_ESTOY_AQUI de los hijos
 		  for (j=0; j <numhijos; j++)
 		  {
 			  msgrcv(msgid, &message, sizeof(message), 0, 0);
@@ -146,19 +158,14 @@ int main(int argc, char* argv[])
 			sleep(60); // Esto es solo para que el esqueleto no muera de inmediato, quitar en el definitivo
 
 		  
-		  // Mucho cÃ³digo con la lÃ³gica de negocio de SERVER
+		  // Mucho codigo con la logica de negocio de SERVER
 		  
-		  // Borrar la cola de mensajerÃ­a, muy importante. No olvides cerrar los ficheros
+		  // Borrar la cola de mensajeria, muy importante. No olvides cerrar los ficheros
 		  msgctl(msgid,IPC_RMID,NULL);
 		  
 	   }
-    }
-
-    // Rama de RAIZ, proceso primigenio
-    
-    else
-    {
-	  
+    }else{
+	  // Rama de RAIZ, proceso primigenio
       alarm(INTERVALO_TIMER);
       signal(SIGALRM, alarmHandler);
       for (;;)    // Solo para el esqueleto
@@ -169,9 +176,8 @@ int main(int argc, char* argv[])
     }
 }
 
-// Manejador de la alarma en el RAIZ
-static void alarmHandler(int signo)
-{
+// Manejador de la alarma en el RAIZ --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+static void alarmHandler(int signo){
 //...
     printf("SOLO PARA EL ESQUELETO... Han pasado 5 segundos\n");
     alarm(INTERVALO_TIMER);
