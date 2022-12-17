@@ -54,11 +54,42 @@ int ContarLineas();
 static void alarmHandler(int signo);
 
 int cuentasegs;                   // Variable para el computo del tiempo total
+/*
+//COMPROBAR SI ES PRIMO ---------------------------------------------------------------------------------------------------------------------------
+//Esta hecha pero no termina de funcionar bien ya que falta implementar la division por intervalos de los hijos
+int Comprobarsiesprimo(long int numero){
+	
+	int primo = 0;
+    int contador = 0;
+    int i = 1;
+		
+        //Vamos a buscar que numeros son primos y cuales no
+        printf("Introduce un numero: \n");
+        scanf("%ld", &numero);
+		
+        while (i <= numero){
 
+                if(numero % i == 0){
+                        contador++;
+                }
+
+                i++;
+        }
+
+        if(contador == 2){
+                printf("El numero es primo \n");
+				primo = numero;
+        }else{
+                printf("El numero no es primo\n");
+        }
+		
+		return primo;
+}
+*/
 //MAIN ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 int main(int argc, char* argv[]){
 	int i,j;
-	 //long int numero;
+	long int numero;
 	 //long int numprimrec;
      //long int nbase;
      //int nrango;
@@ -95,8 +126,9 @@ int main(int argc, char* argv[]){
 	
     pid=fork();       // Creacion del SERVER
     
-    if (pid == 0)     // Rama del hijo de RAIZ (SERVER)
-    {
+	// Rama del hijo de RAIZ (SERVER)
+    if (pid == 0){     
+    
 		pid = getpid();
 		pidservidor = pid;
 		mypid = pidservidor;	   
@@ -109,7 +141,7 @@ int main(int argc, char* argv[]){
 		
 		printf( "Server: System V IPC key = %u\n", key );
 
-        // CreaciÃ³n de la cola de mensajeria
+        // creacion de la cola de mensajeria
 		if ( ( msgid = msgget( key, IPC_CREAT | 0666 ) ) == -1 ) {
 		  perror( "Fallo al crear la cola de mensajes" );
 		  exit( 2 );
@@ -117,12 +149,12 @@ int main(int argc, char* argv[]){
 		printf("Server: Message queue id = %u\n", msgid );
 
         i = 0;
-        // CreaciÃ³n de los procesos CALCuladores
+        // creacion de los procesos CALCuladores
 		while(i < numhijos) {
-		 if (pid > 0) { // Solo SERVER creara¡ hijos
+		 if (pid > 0) { // Solo SERVER creara hijos
 			 pid=fork(); 
-			 if (pid == 0) 
-			   {   // Rama hijo
+			 if (pid == 0){ 
+			      // Rama hijo
 				parentpid = getppid();
 				mypid = getpid();
 			   }
@@ -134,10 +166,16 @@ int main(int argc, char* argv[]){
 		if (mypid != pidservidor){
 
 			message.mesg_type = COD_ESTOY_AQUI;
+			//manda el mensaje "COD_ESTOY_AQUI" e imprime su PID
 			sprintf(message.mesg_text,"%d",mypid);
+			
+			//Para enviar o recibir mensajes de una cola de mensajes
 			msgsnd( msgid, &message, sizeof(message), IPC_NOWAIT);
 		
-			// Un montÃ³n de codigo por escribir
+			//Llamar a la funcion de comprobar si es primo, que es lo q hara cada calculador en un rango diferente
+			//Comprobarsiesprimo(numero);
+			
+			// Un monton de codigo por escribir
 			sleep(60); // Esto es solo para que el esqueleto no muera de inmediato, quitar en el definitivo
 
 			exit(0);
@@ -148,8 +186,7 @@ int main(int argc, char* argv[]){
 		  
 		  
 		  //Recepcion de los mensajes COD_ESTOY_AQUI de los hijos
-		  for (j=0; j <numhijos; j++)
-		  {
+		  for (j=0; j <numhijos; j++){
 			  msgrcv(msgid, &message, sizeof(message), 0, 0);
 			  sscanf(message.mesg_text,"%d",&pid); // TendrÃ¡s que guardar esa pid
 			  printf("\nMe ha enviado un mensaje el hijo %d\n",pid);
