@@ -1,3 +1,4 @@
+
 //TRABAJO REALIZADO POR MARINA GARCIA Y PAULA MÉNDEZ
 //  Empezamos el: 12_12_2022
 
@@ -86,7 +87,47 @@ int Comprobarsiesprimo(long int numero){
 		return primo;
 }
 */
+
+
+//FUNCION CONTAR LINEAS DE PRIMOS.TXT
+int ContarLineas(){
+    FILE * fp; 
+    int contador = 0;  
+    char fnombre[50]; 
+    char c;   
+  
+    // Que el usuario elija el .txt que desee en este caso primos.txt
+    
+    printf("escibre el txt que quieras contar (primos.txt) : "); 
+    scanf("%s", fnombre); 
+  
+    // abrir fichero
+    fp = fopen(fnombre, "r"); 
+  
+    // Comprobar si existe
+    if (fp == NULL) {
+	
+        printf("No existe %s", fnombre); 
+        return 0; 
+ }
+  
+    // extraer caracteres  
+    for (c = getc(fp); c != EOF; c = getc(fp)){
+	}
+        if (c == 'n') //incrementar cuando sea nueva linea
+            contador ++ ; 
+}
+   
+    printf("este fichero %s tiene %d lineas", fnombre, contador); 
+    return(contador);
+  
+	
+}
+
+
 //MAIN ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 int main(int argc, char* argv[]){
 	int i,j;
 	long int numero;
