@@ -55,7 +55,7 @@ int ContarLineas();
 static void alarmHandler(int signo);
 
 int cuentasegs;                   // Variable para el computo del tiempo total
-/*
+
 //COMPROBAR SI ES PRIMO ---------------------------------------------------------------------------------------------------------------------------
 //Esta hecha pero no termina de funcionar bien ya que falta implementar la division por intervalos de los hijos
 int Comprobarsiesprimo(long int numero){
@@ -65,8 +65,8 @@ int Comprobarsiesprimo(long int numero){
     int i = 1;
 		
         //Vamos a buscar que numeros son primos y cuales no
-        printf("Introduce un numero: \n");
-        scanf("%ld", &numero);
+        //printf("Introduce un numero: \n");
+        //scanf("%ld", &numero);
 		
         while (i <= numero){
 
@@ -78,27 +78,26 @@ int Comprobarsiesprimo(long int numero){
         }
 
         if(contador == 2){
-                printf("El numero es primo \n");
+                //printf("El numero es primo \n");
 				primo = numero;
         }else{
-                printf("El numero no es primo\n");
+                //printf("El numero no es primo\n");
         }
 		
 		return primo;
 }
-*/
 
 
-//FUNCION CONTAR LINEAS DE PRIMOS.TXT
+//FUNCION CONTAR LINEAS DE PRIMOS.TXT ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 int ContarLineas(){
-    FILE * fp; 
+     FILE * fp; 
     int contador = 0;  
     char fnombre[50]; 
     char c;   
   
     // Que el usuario elija el .txt que desee en este caso primos.txt
     
-    printf("escibre el txt que quieras contar (primos.txt) : "); 
+	printf("escibre el txt que quieras contar (primos.txt) : "); 
     scanf("%s", fnombre); 
   
     // abrir fichero
@@ -116,42 +115,46 @@ int ContarLineas(){
 	}
         if (c == 'n') //incrementar cuando sea nueva linea
             contador ++ ; 
-}
+
    
     printf("este fichero %s tiene %d lineas", fnombre, contador); 
     return(contador);
-  
-	
 }
 
+//IMPRIMIR LA JERARQUIA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void Imprimirjerarquiaproc(int pidraiz,int pidservidor, int *pidhijos, int numhijos){
+
+	printf("\nRAIZ \t\t SERV \t\t CALC\n");
+	printf("%d \t\t %d  \t\t %d \n ", pidraiz, pidservidor, pidhijos[0]); // Imprimes por primera vez raiz, serv y el primer hijo (0)
+
+	for(int i=1; i<numhijos; i++){ // Desde 1 (incluido) imprimes los hijos
+		printf("\t\t\t\t %d\n", pidhijos[i]);
+	}
+}
 
 //MAIN ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 int main(int argc, char* argv[]){
 	int i,j;
 	long int numero;
-	 //long int numprimrec;
-     //long int nbase;
-     //int nrango;
-     //int nfin;
-     //time_t tstart,tend; 
+	long int numprimrec;
+    long int nbase;
+    int nrango;
+    int nfin;
+    time_t tstart,tend; 
 	
 	key_t key;
     int msgid;    
     int pid, pidservidor, pidraiz, parentpid, mypid, pidcalc;
-     //int *pidhijos;
-     //int intervalo,inicuenta;
+    int *pidhijos;
+    int intervalo,inicuenta;
     int verbosity;
     T_MESG_BUFFER message;
-    // char info[LONGITUD_MSG_ERR];
-     //FILE *fsal, *fc;
+    char info[LONGITUD_MSG_ERR];
+    FILE *fsal, *fc;
     int numhijos;
 
     // Control de entrada, depsues del nombre del script debe figurar el numero de hijos y el parámetro verbosity
-
     //numhijos = 2;     // SOLO para el esqueleto, en el proceso  definitivo vendra por la entrada
-	
 	if(argc != 3){
 
         printf("ERROR, deberia de haber otros parametros");
@@ -213,9 +216,6 @@ int main(int argc, char* argv[]){
 			//Para enviar o recibir mensajes de una cola de mensajes
 			msgsnd( msgid, &message, sizeof(message), IPC_NOWAIT);
 		
-			//Llamar a la funcion de comprobar si es primo, que es lo q hara cada calculador en un rango diferente
-			//Comprobarsiesprimo(numero);
-			
 			// Un monton de codigo por escribir
 			sleep(60); // Esto es solo para que el esqueleto no muera de inmediato, quitar en el definitivo
 
@@ -224,19 +224,38 @@ int main(int argc, char* argv[]){
 		// SERVER
 		else{ 
 		  // Pide memoria dinamica para crear la lista de pids de los hijos CALCuladores
-		  
+		  pidhijos = calloc(numhijos, sizeof(int*));
 		  
 		  //Recepcion de los mensajes COD_ESTOY_AQUI de los hijos
 		  for (j=0; j <numhijos; j++){
 			  msgrcv(msgid, &message, sizeof(message), 0, 0);
-			  sscanf(message.mesg_text,"%d",&pid); // TendrÃ¡s que guardar esa pid
-			  printf("\nMe ha enviado un mensaje el hijo %d\n",pid);
-		  }
+			  sscanf(message.mesg_text,"%d",&pidhijos[j]); // Tendras que guardar esa pid
+			  printf("\nMe ha enviado un mensaje el hijo %d \n",pidhijos[j]);
+            }
 		  
-			sleep(60); // Esto es solo para que el esqueleto no muera de inmediato, quitar en el definitivo
+		  //Imprimir la Jerarquia de procesos
+		  Imprimirjerarquiaproc(pidraiz,pidservidor, pidhijos, numhijos);
+		  
+		  
+		  //Envia a los hijos el intervalo en el que deben de buscar
+			inicuenta = BASE;
+			intervalo = (int)(RANGO/numhijos);
+	
+			for(int j = 0; j < numhijos; j++){
+				message.mesg_type = COD_LIMITES;
+				sprintf(message.mesg_text, "%d %d", inicuenta, intervalo);
+				msgsnd(msgid, &message, sizeof(message), IPC_NOWAIT);
+				inicuenta += intervalo;
+			}
+			//sleep(60); // Esto es solo para que el esqueleto no muera de inmediato, quitar en el definitivo
 
-		  
-		  // Mucho codigo con la logica de negocio de SERVER
+		  //Crear el fichero de resultados primos.txt
+			if ((fsal = fopen(NOMBRE_FICH, "w")) == NULL){
+				perror("Fallo al crear el fichero de salida");
+				exit(ERR_FSAL);
+			}
+			
+		// Mucho codigo con la logica de negocio de SERVER
 		  
 		  // Borrar la cola de mensajeria, muy importante. No olvides cerrar los ficheros
 		  msgctl(msgid,IPC_RMID,NULL);
@@ -244,20 +263,21 @@ int main(int argc, char* argv[]){
 	   }
     }else{
 	  // Rama de RAIZ, proceso primigenio
+	  
+	  cuentasegs = 0;
+	  
       alarm(INTERVALO_TIMER);
       signal(SIGALRM, alarmHandler);
-      for (;;)    // Solo para el esqueleto
-		sleep(1); // Solo para el esqueleto
-	  // Espera del final de SERVER
-      // ...
-      // El final de todo
+	  
+	  wait(NULL); 	//Espera al final del server
+	  printf("RESULTADO: Se han encontrado %d primos \n", ContarLineas());
+	
     }
 }
 
 // Manejador de la alarma en el RAIZ --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 static void alarmHandler(int signo){
 //...
-    printf("SOLO PARA EL ESQUELETO... Han pasado 5 segundos\n");
+	printf("SOLO PARA EL ESQUELETO... Han pasado 5 segundos\n");
     alarm(INTERVALO_TIMER);
-
 }
