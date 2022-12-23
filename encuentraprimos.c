@@ -56,81 +56,6 @@ static void alarmHandler(int signo);
 
 int cuentasegs;                   // Variable para el computo del tiempo total
 
-//COMPROBAR SI ES PRIMO ---------------------------------------------------------------------------------------------------------------------------
-//Esta hecha pero no termina de funcionar bien ya que falta implementar la division por intervalos de los hijos
-int Comprobarsiesprimo(long int numero){
-	
-	int primo = 0;
-    int contador = 0;
-    int i = 1;
-		
-        //Vamos a buscar que numeros son primos y cuales no
-        //printf("Introduce un numero: \n");
-        //scanf("%ld", &numero);
-		
-        while (i <= numero){
-
-                if(numero % i == 0){
-                        contador++;
-                }
-
-                i++;
-        }
-
-        if(contador == 2){
-                //printf("El numero es primo \n");
-				primo = numero;
-        }else{
-                //printf("El numero no es primo\n");
-        }
-		
-		return primo;
-}
-
-
-//FUNCION CONTAR LINEAS DE PRIMOS.TXT ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-int ContarLineas(){
-     FILE * fp; 
-    int contador = 0;  
-    char fnombre[50]; 
-    char c;   
-  
-    // Que el usuario elija el .txt que desee en este caso primos.txt
-    
-	printf("escibre el txt que quieras contar (primos.txt) : "); 
-    scanf("%s", fnombre); 
-  
-    // abrir fichero
-    fp = fopen(fnombre, "r"); 
-  
-    // Comprobar si existe
-    if (fp == NULL) {
-	
-        printf("No existe %s", fnombre); 
-        return 0; 
- }
-  
-    // extraer caracteres  
-    for (c = getc(fp); c != EOF; c = getc(fp)){
-	}
-        if (c == 'n') //incrementar cuando sea nueva linea
-            contador ++ ; 
-
-   
-    printf("este fichero %s tiene %d lineas", fnombre, contador); 
-    return(contador);
-}
-
-//IMPRIMIR LA JERARQUIA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-void Imprimirjerarquiaproc(int pidraiz,int pidservidor, int *pidhijos, int numhijos){
-
-	printf("\nRAIZ \t\t SERV \t\t CALC\n");
-	printf("%d \t\t %d  \t\t %d \n ", pidraiz, pidservidor, pidhijos[0]); // Imprimes por primera vez raiz, serv y el primer hijo (0)
-
-	for(int i=1; i<numhijos; i++){ // Desde 1 (incluido) imprimes los hijos
-		printf("\t\t\t\t %d\n", pidhijos[i]);
-	}
-}
 
 //MAIN ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 int main(int argc, char* argv[]){
@@ -280,4 +205,67 @@ static void alarmHandler(int signo){
 //...
 	printf("SOLO PARA EL ESQUELETO... Han pasado 5 segundos\n");
     alarm(INTERVALO_TIMER);
+}
+
+
+//COMPROBAR SI ES PRIMO ---------------------------------------------------------------------------------------------------------------------------
+//Esta hecha pero no termina de funcionar bien ya que falta implementar la division por intervalos de los hijos
+int Comprobarsiesprimo(long int numero){
+	
+	if (numero < 2){
+		return 0; // Por convenio 0 y 1 no son primos ni compuestos
+	
+		}else{
+			for (int x = 2; x <= (numero / 2) ; x++){
+				if (numero % x == 0) {
+					return 0;
+				}
+			}
+			return 1;
+		}
+}
+
+
+//FUNCION CONTAR LINEAS DE PRIMOS.TXT ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+int ContarLineas(){
+    FILE * fp; 
+    int contador = 0;  
+    char fnombre[50]; 
+    char c;   
+  
+    // Que el usuario elija el .txt que desee en este caso primos.txt
+    
+	printf("escibre el txt que quieras contar (primos.txt) : "); 
+    scanf("%s", fnombre); 
+  
+    // abrir fichero
+    fp = fopen(fnombre, "r"); 
+  
+    // Comprobar si existe
+    if (fp == NULL) {
+	
+        printf("No existe %s", fnombre); 
+        return 0; 
+ }
+  
+    // extraer caracteres  
+    for (c = getc(fp); c != EOF; c = getc(fp)){
+	}
+        if (c == 'n') //incrementar cuando sea nueva linea
+            contador ++ ; 
+
+   
+    printf("este fichero %s tiene %d lineas", fnombre, contador); 
+    return(contador);
+}
+
+//IMPRIMIR LA JERARQUIA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void Imprimirjerarquiaproc(int pidraiz,int pidservidor, int *pidhijos, int numhijos){
+
+	printf("\nRAIZ \t\t SERV \t\t CALC\n");
+	printf("%d \t\t %d  \t\t %d \n ", pidraiz, pidservidor, pidhijos[0]); // Imprimes por primera vez raiz, serv y el primer hijo (0)
+
+	for(int i=1; i<numhijos; i++){ // Desde 1 (incluido) imprimes los hijos
+		printf("\t\t\t\t %d\n", pidhijos[i]);
+	}
 }
