@@ -159,6 +159,7 @@ int main(int argc, char* argv[]){
             }
 		  
 		  //Imprimir la Jerarquia de procesos
+		  pidraiz = getppid();
 		  Imprimirjerarquiaproc(pidraiz,pidservidor, pidhijos, numhijos);
 		  
 		  
@@ -258,14 +259,34 @@ int ContarLineas(){
 	fclose(fsal);
 
 	return contador;
+}
 
 //IMPRIMIR LA JERARQUIA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 void Imprimirjerarquiaproc(int pidraiz,int pidservidor, int *pidhijos, int numhijos){
-
+	
+	printf("\nLa Jerarquia es: ");
 	printf("\nRAIZ \t\t SERV \t\t CALC\n");
 	printf("%d \t\t %d  \t\t %d \n ", pidraiz, pidservidor, pidhijos[0]); // Imprimes por primera vez raiz, serv y el primer hijo (0)
 
 	for(int i=1; i<numhijos; i++){ // Desde 1 (incluido) imprimes los hijos
 		printf("\t\t\t\t %d\n", pidhijos[i]);
 	}
+}
+
+// INFORMAR -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void Informar(char *texto, int verboso){
+	FILE *fsal;
+
+	int prim;
+	prim=*(int*)texto;
+	  
+    if(verboso == 1){
+        fsal = fopen(NOMBRE_FICH,"r");
+
+        while(feof(fsal) == 0){
+            fscanf(fsal, "%d\n", &prim);
+            printf("%d", prim);
+        }
+        fclose(fsal);
+    }
 }
