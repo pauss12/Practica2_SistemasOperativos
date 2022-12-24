@@ -203,8 +203,21 @@ int main(int argc, char* argv[]){
 // Manejador de la alarma en el RAIZ --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 static void alarmHandler(int signo){
 //...
-	printf("SOLO PARA EL ESQUELETO... Han pasado 5 segundos\n");
-    alarm(INTERVALO_TIMER);
+	FILE* fc;
+	
+	int nprim;
+	cuentasegs = cuentasegs + INTERVALO_TIMER;
+	
+	if ((fc = fopen(NOMBRE_FICH_CUENTA, "r" )) != NULL){
+		
+		fscanf(fc, "%d", &nprim);
+		fclose(fc);
+		printf("%02d (segs): %d primos encontrados \n", cuentasegs, nprim);
+		
+	}else{
+		printf("%02d (segs) \n", cuentasegs);
+		alarm(INTERVALO_TIMER);
+	}
 }
 
 
@@ -228,36 +241,23 @@ int Comprobarsiesprimo(long int numero){
 
 //FUNCION CONTAR LINEAS DE PRIMOS.TXT ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 int ContarLineas(){
-    FILE * fp; 
+   FILE *fsal;
     int contador = 0;  
-    char fnombre[50]; 
-    char c;   
-  
-    // Que el usuario elija el .txt que desee en este caso primos.txt
-    
-	printf("escibre el txt que quieras contar (primos.txt) : "); 
-    scanf("%s", fnombre); 
+    char c;    
   
     // abrir fichero
-    fp = fopen(fnombre, "r"); 
+    fsal = fopen(NOMBRE_FICH, "r"); 
   
     // Comprobar si existe
-    if (fp == NULL) {
-	
-        printf("No existe %s", fnombre); 
-        return 0; 
- }
-  
-    // extraer caracteres  
-    for (c = getc(fp); c != EOF; c = getc(fp)){
+	while(feof(fsal) == 0){
+		c = getc(fsal);
+		if(c=='\n'){
+			contador++;
+		}
 	}
-        if (c == 'n') //incrementar cuando sea nueva linea
-            contador ++ ; 
+	fclose(fsal);
 
-   
-    printf("este fichero %s tiene %d lineas", fnombre, contador); 
-    return(contador);
-}
+	return contador;
 
 //IMPRIMIR LA JERARQUIA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 void Imprimirjerarquiaproc(int pidraiz,int pidservidor, int *pidhijos, int numhijos){
