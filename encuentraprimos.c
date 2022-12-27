@@ -118,7 +118,7 @@ int main(int argc, char* argv[]){
 		printf("Server: Message queue id = %u\n", msgid );
 
         i = 0;
-        // creacion de los procesos CALCuladores
+        // Creacion de los procesos CALCuladores
 		while(i < numhijos) {
 		 if (pid > 0) { // Solo SERVER creara hijos
 			 pid=fork(); 
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]){
 		// SERVER
 		else{ 
 		  // Pide memoria dinamica para crear la lista de pids de los hijos CALCuladores
-		  pidhijos = calloc(numhijos, sizeof(int*));
+		  pidhijos = (int*)malloc(numhijos*sizeof(int));
 		  
 		  //Recepcion de los mensajes COD_ESTOY_AQUI de los hijos
 		  for (j=0; j <numhijos; j++){
