@@ -77,6 +77,7 @@ int main(int argc, char* argv[]){
     char info[LONGITUD_MSG_ERR];
     FILE *fsal, *fc;
     int numhijos;
+	int numprimos = 0; 		//Variable para contar el numero de primos encontrados
 
     // Control de entrada, depsues del nombre del script debe figurar el numero de hijos y el parÃ¡metro verbosity
     //numhijos = 2;     // SOLO para el esqueleto, en el proceso  definitivo vendra por la entrada
@@ -157,7 +158,7 @@ int main(int argc, char* argv[]){
 				}
 			}
 			
-			//Envío del mensaje de fin de búsqueda
+			//Envio del mensaje de fin de busqueda
 			message.mesg_type = COD_FIN;
 			sprintf(message.mesg_text,"%d", mypid);
 			msgsnd( msgid, &message, sizeof(message), IPC_NOWAIT);
@@ -197,10 +198,49 @@ int main(int argc, char* argv[]){
 			//sleep(60); // Esto es solo para que el esqueleto no muera de inmediato, quitar en el definitivo
 
 		  //Crear el fichero de resultados primos.txt
-			if ((fsal = fopen(NOMBRE_FICH, "w")) == NULL){
+		  
+		    fsal = fopen(NOMBRE_FICH, "w");
+			nfin = 0;
+		  
+			if (fsal == NULL){
 				perror("Fallo al crear el fichero de salida");
 				exit(ERR_FSAL);
 			}
+			
+			nfin = 0;
+			while(nfin < numhijos) {
+				if(msgrcv(msgid, &message, sizeof(message), 0, 0)) {
+					if(message.mesg_type == COD_RESULTADOS) {
+						
+						Informar(message.mesg_text, verbosity);
+						
+						sscanf(message.mesg_text,"%d:  %ld", &pid, &numprimrec);
+						fprintf(fsal, "%ld\n", numprimrec);
+						numprimos++;
+						if(numprimos%CADA_CUANTOS_ESCRIBO == 0 && numprimos != 0) {
+							fc = fopen(NOMBRE_FICH_CUENTA, "w");
+							fprintf(fc, "%d\n", numprimos);
+							
+							//Cerrar fichero
+							fclose(fc);
+						}
+					}
+					else if(message.mesg_type == COD_FIN) {
+						nfin++;
+						printf("El proceso %s ha terminado\n", message.mesg_text);
+					}
+				}
+				
+			}
+			//Cierro fichero
+			fclose(fsal);
+			printf("\nCalculos terminados\n");
+			time(&tend);
+			printf("NÃºmeros encontrados: %d.\n", numprimos);
+			printf("Tiempo total del calculo: %.2f segundos.\n", difftime(tend, tstart));
+			msgctl(msgid, IPC_RMID, NULL); // Borrar la cola de mensajerÃ­a, muy importante
+			
+		  
 			
 		// Mucho codigo con la logica de negocio de SERVER
 		  
@@ -218,6 +258,9 @@ int main(int argc, char* argv[]){
 	  
 	  wait(NULL); 	//Espera al final del server
 	  printf("RESULTADO: Se han encontrado %d primos \n", ContarLineas());
+	  
+	  //Liberar memoria
+	  free(pidhijos);
 	
     }
 }
@@ -230,7 +273,9 @@ static void alarmHandler(int signo){
 	int nprim;
 	cuentasegs = cuentasegs + INTERVALO_TIMER;
 	
-	if ((fc = fopen(NOMBRE_FICH_CUENTA, "r" )) != NULL){
+	fc = fopen(NOMBRE_FICH_CUENTA, "r" );
+	
+	if (fc != NULL){
 		
 		fscanf(fc, "%d", &nprim);
 		fclose(fc);
@@ -292,6 +337,8 @@ void Imprimirjerarquiaproc(int pidraiz,int pidservidor, int *pidhijos, int numhi
 	for(int i=1; i<numhijos; i++){ // Desde 1 (incluido) imprimes los hijos
 		printf("\t\t\t\t %d\n", pidhijos[i]);
 	}
+	
+	printf("\n");
 }
 
 // INFORMAR -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
