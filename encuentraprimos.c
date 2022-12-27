@@ -139,10 +139,31 @@ int main(int argc, char* argv[]){
 			sprintf(message.mesg_text,"%d",mypid);
 			
 			//Para enviar o recibir mensajes de una cola de mensajes
+		
+			msgsnd( msgid, &message, sizeof(message), IPC_NOWAIT);
+			//RECIBIMOS EL COD LIMITE
+			msgrcv(msgid, &message, sizeof(message), COD_LIMITES, 0);
+			sscanf(message.mesg_text,"%ld %d",&nbase,&intervalo);//guardamos la base para cada hijo
+			printf("Me ha enviado una base el servidor\n");
+			sleep(1);
+			
+			//Calcular numeros primos, y enviar mensaje al server si se encuentra un primo
+			for(numero=nbase;numero<nbase+intervalo;numero++){//nrango=1000 nfin= 4000
+				
+				if (Comprobarsiesprimo(numero)){
+					message.mesg_type = COD_RESULTADOS;
+					sprintf(message.mesg_text,"%d:  %ld", mypid, numero);
+					msgsnd(msgid, &message, sizeof(message), IPC_NOWAIT);
+				}
+			}
+			
+			//Envío del mensaje de fin de búsqueda
+			message.mesg_type = COD_FIN;
+			sprintf(message.mesg_text,"%d", mypid);
 			msgsnd( msgid, &message, sizeof(message), IPC_NOWAIT);
 		
 			// Un monton de codigo por escribir
-			sleep(60); // Esto es solo para que el esqueleto no muera de inmediato, quitar en el definitivo
+		  //	sleep(60); // Esto es solo para que el esqueleto no muera de inmediato, quitar en el definitivo
 
 			exit(0);
 		}
